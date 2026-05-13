@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初一下册 音标+发音 每日10词</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;}
+        body{background:#f0f7ff;padding:15px;max-width:100%;margin:0 auto;}
+        .box{background:#fff;border-radius:12px;padding:20px;margin-bottom:15px;box-shadow:0 2px 8px #ddd;}
+        h2{color:#2c7be5;text-align:center;margin-bottom:15px;font-size:20px;}
+        .info{font-size:16px;margin:8px 0;color:#333;}
+        .btn{width:100%;padding:14px 10px;background:#2c7be5;color:white;border:none;border-radius:8px;font-size:17px;margin:6px 0;cursor:pointer;}
+        .word-card{padding:30px 15px;border:2px solid #2c7be5;border-radius:12px;text-align:center;margin:20px 0;}
+        .en{font-size:32px;font-weight:bold;margin-bottom:10px;color:#222;}
+        .phonetic{font-size:18px;color:#888;margin-bottom:12px;}
+        .cn{font-size:22px;color:#666;display:none;}
+        .record-item{padding:10px 0;border-bottom:1px solid #eee;font-size:16px;}
+        .hide{display:none;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>初一下册｜每日10词 带发音</h2>
+        <div class="info">今日已背：<span id="todayCount">0</span> / 10</div>
+        <div class="info">待复习单词：<span id="reviewCount">0</span> 个</div>
+        <div class="info">已自学累计：<span id="allCount">0</span> 个</div>
+    </div>
+
+    <div class="box" id="mainBox">
+        <button class="btn" onclick="startNewWord()">开始今日新词</button>
+        <button class="btn" onclick="startReview()">开始旧词复习</button>
+        <button class="btn" onclick="showRecord()">家长查看学习记录</button>
+    </div>
+
+    <div class="box hide" id="wordBox">
+        <div class="word-card">
+            <div class="en" id="enWord"> </div>
+            <div class="phonetic" id="phoneticWord"></div>
+            <div class="cn" id="cnMean"></div>
+        </div>
+        <button class="btn" onclick="readWord()">再听一遍发音</button>
+        <button class="btn" onclick="showMean()">显示中文意思</button>
+        <button class="btn" onclick="nextWord()">记住了，下一个</button>
+        <button class="btn" onclick="failWord()">没记住，以后复习</button>
+    </div>
+
+    <div class="box hide" id="recordBox">
+        <h2>每日学习打卡记录</h2>
+        <div id="recordList"></div>
+        <button class="btn" onclick="backMain()">返回</button>
+    </div>
+
+<script>
+const wordList = [
+    {en:"guitar",phon:"/ɡɪˈtɑː(r)/",cn:"吉他"},
+    {en:"sing",phon:"/sɪŋ/",cn:"唱歌；演唱"},
+    {en:"swim",phon:"/swɪm/",cn:"游泳"},
+    {en:"dance",phon:"/dɑːns/",cn:"跳舞；舞蹈"},
+    {en:"draw",phon:"/drɔː/",cn:"画"},
+    {en:"chess",phon:"/tʃes/",cn:"国际象棋"},
+    {en:"speak",phon:"/spiːk/",cn:"说；讲"},
+    {en:"join",phon:"/dʒɔɪn/",cn:"参加；加入"},
+    {en:"club",phon:"/klʌb/",cn:"俱乐部"},
+    {en:"tell",phon:"/tel/",cn:"讲述；告诉"},
+    {en:"story",phon:"/ˈstɔːri/",cn:"故事；小说"},
+    {en:"write",phon:"/raɪt/",cn:"写作；书写"},
+    {en:"show",phon:"/ʃəʊ/",cn:"演出；展示"},
+    {en:"or",phon:"/ɔː(r)/",cn:"或者；也不"},
+    {en:"talk",phon:"/tɔːk/",cn:"说话；交谈"},
+    {en:"usually",phon:"/ˈjuːʒuəli/",cn:"通常；经常"},
+    {en:"brush",phon:"/brʌʃ/",cn:"刷；刷子"},
+    {en:"tooth",phon:"/tuːθ/",cn:"牙齿"},
+    {en:"shower",phon:"/ˈʃaʊə(r)/",cn:"淋浴"},
+    {en:"night",phon:"/naɪt/",cn:"夜晚；晚上"},
+    {en:"job",phon:"/dʒɒb/",cn:"工作；职业"},
+    {en:"work",phon:"/wɜːk/",cn:"工作"},
+    {en:"station",phon:"/ˈsteɪʃn/",cn:"车站；电台"},
+    {en:"exercise",phon:"/ˈeksəsaɪz/",cn:"锻炼；练习"},
+    {en:"walk",phon:"/wɔːk/",cn:"行走；步行"},
+    {en:"train",phon:"/treɪn/",cn:"火车"},
+    {en:"bus",phon:"/bʌs/",cn:"公共汽车"},
+    {en:"subway",phon:"/ˈsʌbweɪ/",cn:"地铁"},
+    {en:"ride",phon:"/raɪd/",cn:"骑；乘坐"},
+    {en:"bike",phon:"/baɪk/",cn:"自行车"},
+    {en:"minute",phon:"/ˈmɪnɪt/",cn:"分钟"},
+    {en:"far",phon:"/fɑː(r)/",cn:"远的；遥远的"},
+    {en:"kilometer",phon:"/ˈkɪləˌmiːtə/",cn:"千米；公里"},
+    {en:"drive",phon:"/draɪv/",cn:"开车；驾驶"},
+    {en:"live",phon:"/lɪv/",cn:"居住；生活"},
+    {en:"rule",phon:"/ruːl/",cn:"规则；规章"},
+    {en:"arrive",phon:"/əˈraɪv/",cn:"到达"},
+    {en:"hallway",phon:"/ˈhɔːlweɪ/",cn:"走廊；过道"},
+    {en:"uniform",phon:"/ˈjuːnɪfɔːm/",cn:"校服；制服"},
+    {en:"listen",phon:"/ˈlɪsn/",cn:"听；倾听"},
+    {en:"fight",phon:"/faɪt/",cn:"打架；战斗"},
+    {en:"sorry",phon:"/ˈsɒri/",cn:"抱歉的；难过的"},
+    {en:"outside",phon:"/ˌaʊtˈsaɪd/",cn:"在外面；外部"},
+    {en:"wear",phon:"/weə(r)/",cn:"穿；戴"},
+    {en:"important",phon:"/ɪmˈpɔːtnt/",cn:"重要的"},
+    {en:"panda",phon:"/ˈpændə/",cn:"熊猫"},
+    {en:"tiger",phon:"/ˈtaɪɡə(r)/",cn:"老虎"},
+    {en:"elephant",phon:"/ˈelɪfənt/",cn:"大象"},
+    {en:"koala",phon:"/kəʊˈɑːlə/",cn:"树袋熊"},
+    {en:"lion",phon:"/ˈlaɪən/",cn:"狮子"},
+    {en:"giraffe",phon:"/dʒəˈrɑːf/",cn:"长颈鹿"},
+    {en:"cute",phon:"/kjuːt/",cn:"可爱的"},
+    {en:"lazy",phon:"/ˈleɪzi/",cn:"懒惰的"},
+    {en:"smart",phon:"/smɑːt/",cn:"聪明的"},
+    {en:"beautiful",phon:"/ˈbjuːtɪfl/",cn:"美丽的"}
+];
+
+let todayWordArr = [];
+let reviewWordArr = [];
+let nowIndex = 0;
+let currentWord = null;
+const REVIEW_DAY = [1,3,7,14,30];
+
+function readWord(){
+    if(!currentWord) return;
+    let utter = new SpeechSynthesisUtterance(currentWord.en);
+    utter.lang = "en-US";
+    utter.rate = 0.9;
+    speechSynthesis.speak(utter);
+}
+
+function initData(){
+    if(!localStorage.getItem("wordData")){
+        localStorage.setItem("wordData",JSON.stringify({
+            learnIndex:0,
+            todayDone:0,
+            record:[],
+            wordLog:[]
+        }));
+    }
+    updateCount();
+}
+
+function updateCount(){
+    let data = JSON.parse(localStorage.getItem("wordData"));
+    document.getElementById("todayCount").innerText = data.todayDone;
+    document.getElementById("allCount").innerText = data.learnIndex;
+    let now = Date.now();
+    let needReview = data.wordLog.filter(item=>{
+        return REVIEW_DAY.some(d=>{
+            let t = item.firstTime + d*24*60*60*1000;
+            return now >= t && !item.reviewed.includes(d);
+        });
+    });
+    document.getElementById("reviewCount").innerText = needReview.length;
+}
+
+function startNewWord(){
+    let data = JSON.parse(localStorage.getItem("wordData"));
+    if(data.todayDone >= 10){
+        alert("今天10个单词已经学完，明天继续顺着课本往后学！");
+        return;
+    }
+    todayWordArr = [];
+    for(let i=0;i<10;i++){
+        let idx = data.learnIndex + i;
+        if(wordList[idx]) todayWordArr.push(wordList[idx]);
+    }
+    if(todayWordArr.length === 0){
+        alert("初一下册单词已全部学完！");
+        return;
+    }
+    nowIndex = 0;
+    showWordBox();
+    showNowWord();
+}
+
+function showNowWord(){
+    if(nowIndex >= todayWordArr.length){
+        saveTodayLearn();
+        alert("今日10词完成！自动安排后续复习");
+        backMain();
+        return;
+    }
+    currentWord = todayWordArr[nowIndex];
+    document.getElementById("enWord").innerText = currentWord.en;
+    document.getElementById("phoneticWord").innerText = currentWord.phon;
+    document.getElementById("cnMean").innerText = currentWord.cn;
+    document.getElementById("cnMean").style.display = "none";
+    readWord();
+}
+
+function showMean(){
+    document.getElementById("cnMean").style.display = "block";
+}
+
+function nextWord(){
+    let data = JSON.parse(localStorage.getItem("wordData"));
+    let w = todayWordArr[nowIndex];
+    let log = data.wordLog.find(x=>x.en===w.en);
+    if(!log){
+        data.wordLog.push({
+            en:w.en,
+            firstTime:Date.now(),
+            reviewed:[]
+        });
+    }
+    data.learnIndex ++;
+    data.todayDone ++;
+    nowIndex ++;
+    localStorage.setItem("wordData",JSON.stringify(data));
+    updateCount();
+    showNowWord();
+}
+
+function failWord(){
+    nowIndex ++;
+    showNowWord();
+}
+
+function saveTodayLearn(){
+    let data = JSON.parse(localStorage.getItem("wordData"));
+    let day = new Date().toLocaleDateString();
+    if(!data.record.find(x=>x.day===day)){
+        data.record.push({
+            day:day,
+            count:10,
+            status:"完成今日10词 课本顺序自学"
+        });
+    }
+    localStorage.setItem("wordData",JSON.stringify(data));
+}
+
+function startReview(){
+    let data = JSON.parse(localStorage.getItem("wordData"));
+    let now = Date.now();
+    reviewWordArr = [];
+    data.wordLog.forEach(item=>{
+        REVIEW_DAY.forEach(d=>{
+            let t = item.firstTime + d*24*60*60*1000;
+            if(now >= t && !item.reviewed.includes(d)){
+                let w = wordList.find(x=>x.en===item.en);
+                if(w) reviewWordArr.push({...w,log:item,day:d});
+            }
+        });
+    });
+    if(reviewWordArr.length===0){
+        alert("暂无需要复习的单词，继续每天学10个就行！");
+        return;
+    }
+    nowIndex = 0;
+    showWordBox();
+    showReviewWord();
+}
+
+function showReviewWord(){
+    if(nowIndex >= reviewWordArr.length){
+        let data = JSON.parse(localStorage.getItem("wordData"));
+        reviewWordArr.forEach(item=>{
+            let log = data.wordLog.find(x=>x.en===item.en);
+            if(log && !log.reviewed.includes(item.day)){
+                log.reviewed.push(item.day);
+            }
+        });
+        localStorage.setItem("wordData",JSON.stringify(data));
+        alert("本轮复习全部完成！");
+        backMain();
+        return;
+    }
+    currentWord = reviewWordArr[nowIndex];
+    document.getElementById("enWord").innerText = currentWord.en;
+    document.getElementById("phoneticWord").innerText = currentWord.cn;
+    document.getElementById("cnMean").innerText = currentWord.cn;
+    document.getElementById("cnMean").style.display = "none";
+    readWord();
+}
+
+function showRecord(){
+    let data = JSON.parse(localStorage.getItem("wordData"));
+    let html = "";
+    if(data.record.length===0){
+        html = "<div class='record-item'>暂时还没有学习记录</div>";
+    }else{
+        data.record.forEach(item=>{
+            html += `<div class='record-item'>${item.day} → ${item.status}</div>`;
+        });
+    }
+    document.getElementById("recordList").innerHTML = html;
+    document.getElementById("mainBox").classList.add("hide");
+    document.getElementById("wordBox").classList.add("hide");
+    document.getElementById("recordBox").classList.remove("hide");
+}
+
+function showWordBox(){
+    document.getElementById("mainBox").classList.add("hide");
+    document.getElementById("recordBox").classList.add("hide");
+    document.getElementById("wordBox").classList.remove("hide");
+}
+
+function backMain(){
+    document.getElementById("mainBox").classList.remove("hide");
+    document.getElementById("wordBox").classList.add("hide");
+    document.getElementById("recordBox").classList.add("hide");
+    updateCount();
+}
+
+initData();
+</script>
+</body>
+</html>
